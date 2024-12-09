@@ -22,6 +22,8 @@ function normalizeTime(value, unit) {
         case "seconds": return value / 3600;
         case "minutes": return value / 60;
         case "hours": return value;
+        case "days": return value * 24;
+        case "year": return value * 24 * 365.25
         default: return value;
     }
 }
@@ -31,6 +33,8 @@ function denormalizeTime(value, unit) {
         case "seconds": return value * 3600;
         case "minutes": return value * 60;
         case "hours": return value;
+        case "days": return value * 24;
+        case "year": return value * 24 * 365.25
         default: return value;
     }
 }
