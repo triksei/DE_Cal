@@ -188,6 +188,7 @@ function generateInputForm(calcType, calculationType) {
                         <input type="number" id="time2" required>
                     </div>
                     ${unitOfXInput}
+                    ${timeUnitDropdown}
                 `;
                 break;
             case 'find-time':
@@ -420,12 +421,55 @@ At time ${t2} ${timeUnit}, x is ${x2.toFixed(4)} ${unitX}
 }
 
 function calculateGrowthDecayInitial() {
-    const x1 = parseFloat(document.getElementById('amount1').value);
-    const t1 = parseFloat(document.getElementById('time1').value);
-    const x2 = parseFloat(document.getElementById('amount2').value);
-    const t2 = parseFloat(document.getElementById('time2').value);
-    const unitX = document.getElementById('unit-x').value;
-    const timeUnit = document.getElementById('unit-time').value;
+    // Comprehensive element selection and validation
+    const requiredElements = [
+        'amount1', 'time1', 'amount2', 'time2', 'unit-x', 'unit-time'
+    ];
+
+    // Check for missing elements
+    const missingElements = requiredElements.filter(id => !document.getElementById(id));
+    if (missingElements.length > 0) {
+        console.error('Missing input elements:', missingElements);
+        alert(`Error: The following input fields are missing: ${missingElements.join(', ')}. 
+Please ensure the form is correctly generated.`);
+        return;
+    }
+
+    // Get all required elements
+    const amount1El = document.getElementById('amount1');
+    const time1El = document.getElementById('time1');
+    const amount2El = document.getElementById('amount2');
+    const time2El = document.getElementById('time2');
+    const unitXEl = document.getElementById('unit-x');
+    const timeUnitEl = document.getElementById('unit-time');
+
+    // Validate input values
+    const inputValues = [
+        { el: amount1El, name: 'Amount 1' },
+        { el: time1El, name: 'Time 1' },
+        { el: amount2El, name: 'Amount 2' },
+        { el: time2El, name: 'Time 2' },
+        { el: unitXEl, name: 'Unit of Quantity' }
+    ];
+
+    const invalidInputs = inputValues.filter(input => 
+        !input.el.value || 
+        (input.name !== 'Unit of Quantity' && isNaN(parseFloat(input.el.value)))
+    );
+
+    if (invalidInputs.length > 0) {
+        const invalidNames = invalidInputs.map(input => input.name);
+        alert(`Please check the following inputs: ${invalidNames.join(', ')}`);
+        return;
+    }
+
+    // Parse input values
+    const x1 = parseFloat(amount1El.value);
+    const t1 = parseFloat(time1El.value);
+    const x2 = parseFloat(amount2El.value);
+    const t2 = parseFloat(time2El.value);
+    const unitX = unitXEl.value;
+    const timeUnit = timeUnitEl.value;
 
     // Normalize time
     const t1Norm = normalizeTime(t1, timeUnit);
@@ -434,6 +478,12 @@ function calculateGrowthDecayInitial() {
     // Detailed calculation steps
     // Step 1: Calculate time difference
     const timeDiff = t2Norm - t1Norm;
+
+    // Prevent division by zero or very small numbers
+    if (Math.abs(timeDiff) < 1e-10) {
+        alert('Time difference is too small. Please choose times further apart.');
+        return;
+    }
 
     // Step 2: Calculate growth/decay rate (k)
     const k = Math.log(x2 / x1) / timeDiff;
@@ -445,6 +495,9 @@ function calculateGrowthDecayInitial() {
     const verifyX2 = x0 * Math.exp(k * t2Norm);
 
     // Display result with detailed steps
+    const resultSection = document.getElementById('resultSection');
+    const resultText = document.getElementById('resultText');
+
     resultSection.style.display = 'block';
     resultText.innerHTML = `
 Detailed Calculation Steps:
@@ -468,7 +521,11 @@ Calculating x₂ using x₀ and k:
 x₂ = ${x0.toFixed(4)} * e^(${k.toFixed(4)} * ${t2Norm.toFixed(4)})
     = ${verifyX2.toFixed(4)} ${unitX}
 
-Calculated x₂ matches input: ${Math.abs(verifyX2 - x2) < 0.0001 ? 'YES' : 'NO'}
+Verification Accuracy:
+- Expected x₂: ${x2.toFixed(4)} ${unitX}
+- Calculated x₂: ${verifyX2.toFixed(4)} ${unitX}
+- Absolute Difference: ${Math.abs(verifyX2 - x2).toFixed(4)} ${unitX}
+- Verification match: ${Math.abs(verifyX2 - x2) < 0.0001 ? 'YES' : 'NO'}
 
 Final Results:
 - Initial Value (x₀): ${x0.toFixed(4)} ${unitX}
@@ -535,74 +592,74 @@ Final Results:
     promptContinue();
 }
 
-function calculateHeatTransferInitialTemp() {
+function calculateHeatTransferTemp() {
     const ambientTemp = parseFloat(document.getElementById('ambient-temp').value);
-    const t1 = parseFloat(document.getElementById('known-time1').value);
-    const temp1 = parseFloat(document.getElementById('known-temp1').value);
-    const t2 = parseFloat(document.getElementById('known-time2').value);
-    const temp2 = parseFloat(document.getElementById('known-temp2').value);
+    const initialTemp = parseFloat(document.getElementById('initial-temp').value);
+    const knownTime = parseFloat(document.getElementById('known-time').value);
+    const knownTemp = parseFloat(document.getElementById('known-temp').value);
+    const targetTime = parseFloat(document.getElementById('target-time').value);
     const tempUnit = document.getElementById('unit-temp').value;
     const timeUnit = document.getElementById('unit-time').value;
 
     // Convert temperatures to Kelvin
     const ambientTempK = toKelvin(ambientTemp, tempUnit);
-    const temp1K = toKelvin(temp1, tempUnit);
-    const temp2K = toKelvin(temp2, tempUnit);
+    const initialTempK = toKelvin(initialTemp, tempUnit);
+    const knownTempK = toKelvin(knownTemp, tempUnit);
 
     // Normalize time
-    const t1Norm = normalizeTime(t1, timeUnit);
-    const t2Norm = normalizeTime(t2, timeUnit);
+    const knownTimeNorm = normalizeTime(knownTime, timeUnit);
+    const targetTimeNorm = normalizeTime(targetTime, timeUnit);
 
-    // Step 1: Calculate time difference
-    const timeDiff = Math.abs(t1Norm - t2Norm);
+    // Step 1: Calculate heat transfer coefficient (k)
+    const k = -Math.log((knownTempK - ambientTempK) / (initialTempK - ambientTempK)) / knownTimeNorm;
 
-    // Step 2: Calculate heat transfer coefficient (k)
-    const k = -Math.log((temp1K - ambientTempK) / (temp2K - ambientTempK)) / timeDiff;
+    // Step 2: Calculate target temperature
+    const targetTempK = ambientTempK + (initialTempK - ambientTempK) * Math.exp(-k * targetTimeNorm);
+    const targetTemp = fromKelvin(targetTempK, tempUnit);
 
-    // Step 3: Calculate initial temperature
-    const initialTempK = ambientTempK + (temp1K - ambientTempK) / Math.exp(-k * t1Norm);
-    const initialTemp = fromKelvin(initialTempK, tempUnit);
-
-    // Step 4: Verify calculations
-    const verifyTemp1K = ambientTempK + (initialTempK - ambientTempK) * Math.exp(-k * t1Norm);
-    const verifyTemp1 = fromKelvin(verifyTemp1K, tempUnit);
+    // Step 3: Verify calculations
+    const verifyTempK = ambientTempK + (initialTempK - ambientTempK) * Math.exp(-k * knownTimeNorm);
+    const verifyTemp = fromKelvin(verifyTempK, tempUnit);
 
     // Display result with detailed steps
+    const resultSection = document.getElementById('resultSection');
+    const resultText = document.getElementById('resultText');
+
     resultSection.style.display = 'block';
     resultText.innerHTML = `
-Detailed Heat Transfer Calculation Steps:
+Detailed Heat Transfer Temperature Calculation Steps:
 
-Step 1: Time and Temperature Analysis
+Step 1: Temperature Analysis
 Ambient Temperature (Tₐ): ${ambientTempK.toFixed(4)} K (${ambientTemp.toFixed(4)} ${tempUnit})
-Time t₁: ${t1Norm.toFixed(4)} normalized hours
-Temperature at t₁ (T₁): ${temp1K.toFixed(4)} K (${temp1.toFixed(4)} ${tempUnit})
-Time t₂: ${t2Norm.toFixed(4)} normalized hours
-Temperature at t₂ (T₂): ${temp2K.toFixed(4)} K (${temp2.toFixed(4)} ${tempUnit})
+Initial Temperature (T₀): ${initialTempK.toFixed(4)} K (${initialTemp.toFixed(4)} ${tempUnit})
+Known Temperature at t₁: ${knownTempK.toFixed(4)} K (${knownTemp.toFixed(4)} ${tempUnit})
+Known Time (t₁): ${knownTimeNorm.toFixed(4)} normalized hours
+Target Time (t₂): ${targetTimeNorm.toFixed(4)} normalized hours
 
 Step 2: Calculate Heat Transfer Coefficient (k)
-k = -ln((${temp1K.toFixed(4)} - ${ambientTempK.toFixed(4)}) / 
-        (${temp2K.toFixed(4)} - ${ambientTempK.toFixed(4)})) / |${t1Norm.toFixed(4)} - ${t2Norm.toFixed(4)}|
+k = -ln((${knownTempK.toFixed(4)} - ${ambientTempK.toFixed(4)}) / 
+        (${initialTempK.toFixed(4)} - ${ambientTempK.toFixed(4)})) / ${knownTimeNorm.toFixed(4)}
   = ${k.toFixed(4)} per normalized hour
 
-Step 3: Calculate Initial Temperature
-T₀ = ${ambientTempK.toFixed(4)} + 
-     (${temp1K.toFixed(4)} - ${ambientTempK.toFixed(4)}) / 
-     e^(-${k.toFixed(4)} * ${t1Norm.toFixed(4)})
-   = ${initialTempK.toFixed(4)} K
-   = ${initialTemp.toFixed(4)} ${tempUnit}
+Step 3: Calculate Target Temperature
+T(t₂) = ${ambientTempK.toFixed(4)} + 
+        (${initialTempK.toFixed(4)} - ${ambientTempK.toFixed(4)}) * 
+        e^(-${k.toFixed(4)} * ${targetTimeNorm.toFixed(4)})
+      = ${targetTempK.toFixed(4)} K
+      = ${targetTemp.toFixed(4)} ${tempUnit}
 
 Step 4: Verification
-Recalculating T₁ using initial temperature:
+Recalculating Known Temperature (T₁):
 T₁ = ${ambientTempK.toFixed(4)} + 
      (${initialTempK.toFixed(4)} - ${ambientTempK.toFixed(4)}) * 
-     e^(-${k.toFixed(4)} * ${t1Norm.toFixed(4)})
-   = ${verifyTemp1K.toFixed(4)} K
-   = ${verifyTemp1.toFixed(4)} ${tempUnit}
+     e^(-${k.toFixed(4)} * ${knownTimeNorm.toFixed(4)})
+   = ${verifyTempK.toFixed(4)} K
+   = ${verifyTemp.toFixed(4)} ${tempUnit}
 
-Verification match: ${Math.abs(verifyTemp1 - temp1) < 0.0001 ? 'YES' : 'NO'}
+Verification match: ${Math.abs(verifyTemp - knownTemp) < 0.0001 ? 'YES' : 'NO'}
 
 Final Results:
-- Initial Temperature (T₀): ${initialTemp.toFixed(4)} ${tempUnit}
+- Temperature at Target Time (t₂): ${targetTemp.toFixed(4)} ${tempUnit}
 - Heat Transfer Coefficient (k): ${k.toFixed(4)} per ${timeUnit}
     `;
     promptContinue();
