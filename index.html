@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Differential Equations Calculator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Welcome Section -->
+    <div id="welcomeSection">
+        <h1>Differential Equations Calculator</h1>
+        <h4>This project is accredited to the owner of the website, Trixie Grace C. Batiquin. 
+            This is a project a for the subject EMATH 213: Differential Equations to be submitted to Engr. Ramuel Sigue.</h4>
+        <p>Explore Growth/Decay and Heat Transfer Calculations</p>
+        <button id="proceedButton">Start Calculator</button>
+    </div>
+
+    <!-- Calculator Section -->
+    <div id="calculatorSection" style="display:none;">
+        <h2>Select Calculation Type</h2>
+        <select id="calcType">
+            <option value="">Select Calculation</option>
+            <option value="growth-decay">Growth and Decay</option>
+            <option value="heat-cool">Heat Transfer and Cooling</option>
+        </select>
+
+        <div id="calculatorOptions" style="display:none;">
+            <h3 id="calculatorTitle"></h3>
+            <select id="calculationType">
+                <option value="">Select Calculation Variant</option>
+            </select>
+
+            <div id="inputForm"></div>
+            <button id="calculateButton">Calculate</button>
+        </div>
+
+        <div id="resultSection" style="display:none;">
+            <h3>Results</h3>
+            <pre id="resultText"></pre>
+        </div>
+    </div>
+    </body>
+    <script src="script.js"></script>
+</html>
