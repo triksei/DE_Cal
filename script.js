@@ -196,27 +196,27 @@ function generateInputForm(calcType, calculationType) {
                 `;
                 break;
             case 'find-time':
-                inputForm.innerHTML = `
-                    <div class="input-group">
-                        <label for="initial-value">Initial Value (x₀):</label>
-                        <input type="number" id="initial-value" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="amount1">Amount at t1 (x₁):</label>
-                        <input type="number" id="amount1" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="amount1">Time t1:</label>
-                        <input type="number" id="amount1" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="amount1">Amount at Time t2 (x2):</label>
-                        <input type="number" id="amount1" required>
-                    </div>
-                    ${unitOfXInput}
-                    ${timeUnitDropdown}
-                `;
-                break;
+                    inputForm.innerHTML = `
+                        <div class="input-group">
+                            <label for="initial-value">Initial Value (x₀):</label>
+                            <input type="number" id="initial-value" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="amount1">Amount at Time t1 (x1):</label>
+                            <input type="number" id="amount1" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="time1">Time t1:</label>
+                            <input type="number" id="time1" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="amount2">Amount at Time t2 (x2):</label>
+                            <input type="number" id="amount2" required>
+                        </div>
+                        ${unitOfXInput}
+                        ${timeUnitDropdown}
+                    `;
+                    break;
         }
     } else if (calcType === 'heat-cool') {
         switch (calculationType) {
@@ -546,7 +546,7 @@ Final Results:
     promptContinue();
 }
 
-function calculateGrowthDecayInitial() {
+function calculateGrowthDecayTime() {
     // Comprehensive element selection and validation
     const requiredElements = [
         'initial-value', 'amount1', 'time1', 'amount2', 'unit-x', 'unit-time'
@@ -607,12 +607,21 @@ Please ensure the form is correctly generated.`);
     // Step 2: Calculate time to reach x2
     const t2 = Math.log(x2 / x0) / k;
 
+    // Determine growth or decay
+    const growthType = k > 0 ? 'growth' : 'decay';
+    const absoluteK = Math.abs(k);
+
+    // Create descriptive sentence
+    const timeSentence = `The time required to ${growthType === 'growth' ? 'grow' : 'reduce'} from ${x0.toFixed(2)} ${unitX} to ${x2.toFixed(2)} ${unitX} with a ${growthType} rate of ${absoluteK.toFixed(4)} per ${timeUnit} is ${t2.toFixed(4)} ${timeUnit}.`;
+
     // Display result with detailed steps
     const resultSection = document.getElementById('resultSection');
     const resultText = document.getElementById('resultText');
 
     resultSection.style.display = 'block';
     resultText.innerHTML = `
+${timeSentence}
+
 Detailed Calculation Steps:
 
 Step 1: Calculate Growth/Decay Rate (k)
@@ -634,6 +643,7 @@ x₀ * e^(k * t₂) = ${(x0 * Math.exp(k * t2)).toFixed(4)} ${unitX}
 Expected x₂    = ${x2.toFixed(4)} ${unitX}
     `;
     promptContinue();
+
 }
 
 function calculateHeatTransferTemp() {
