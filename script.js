@@ -137,6 +137,8 @@ function generateInputForm(calcType, calculationType) {
                 <option value="seconds">Seconds</option>
                 <option value="minutes">Minutes</option>
                 <option value="hours" selected>Hours</option>
+                <option value="days">Days</option>
+                <option value="year">Years</option>
             </select>
         </div>
     `;
